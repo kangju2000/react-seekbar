@@ -1,7 +1,9 @@
-import React from 'react';
+import styled from '@emotion/styled';
 
 const Seekbar = () => {
-  return <div></div>;
+  return <Container>Seekbar</Container>;
 };
+
+const Container = styled.div``;
 
 export default Seekbar;
