@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 interface SeekbarProps {
   width?: number;
@@ -8,14 +8,17 @@ interface SeekbarProps {
   innerColor?: string;
   position_ms?: number;
   duration_ms?: number;
+  radius?: number;
   onSeek?: (position: number) => void;
 }
-type ContainerStyleType = Pick<SeekbarProps, 'height'> & HandleStyleType;
-type OuterSeekbarStyleType = Pick<SeekbarProps, 'width' | 'height' | 'outerColor'>;
-type InnerSeekbarStyleType = Pick<SeekbarProps, 'innerColor'> & HandleStyleType;
-type HandleStyleType = {
+type ContainerStyleType = Pick<SeekbarProps, 'height'> & {
   percentage: number;
 };
+type OuterSeekbarStyleType = Pick<SeekbarProps, 'width' | 'height' | 'outerColor' | 'radius'>;
+type InnerSeekbarStyleType = Pick<SeekbarProps, 'innerColor' | 'radius'> & {
+  percentage: number;
+};
+type HandleStyleType = ContainerStyleType;
 
 function getSeekbarPosition(e: React.MouseEvent, width: number) {
   const rect = e.currentTarget.getBoundingClientRect();
@@ -27,26 +30,28 @@ function getSeekbarPosition(e: React.MouseEvent, width: number) {
 const Seekbar = ({
   width = 300,
   height = 10,
-  outerColor = '#000',
+  outerColor = '#a1a1a1',
   innerColor = '#eee',
   position_ms = 1,
   duration_ms = 1,
+  radius = 5,
   onSeek = () => undefined,
 }: SeekbarProps) => {
   const [mousePosition, setMousePosition] = useState(null);
   const [isDrag, setIsDrag] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const position = position_ms / duration_ms;
+  const percentage = mousePosition ? mousePosition * 100 : position * 100;
 
   const handleMouseDown = () => {
     setIsDrag(true);
   };
 
   const handleMouseMove = (event: React.MouseEvent) => {
-    if (isDrag) {
-      setMousePosition(getSeekbarPosition(event, width));
-    }
+    if (!isDrag) return;
+    const position = getSeekbarPosition(event, width);
+    if (position < 0 || position > 1) return;
+    setMousePosition(position);
   };
 
   const handleMouseUp = () => {
@@ -55,22 +60,25 @@ const Seekbar = ({
     setMousePosition(null);
   };
 
+  const handleMouseLeave = () => {
+    if (!isDrag) return;
+    setIsDrag(false);
+    setMousePosition(null);
+  };
+
   return (
     <Container
-      height={height * 2}
-      percentage={mousePosition ? mousePosition * 100 : position * 100}
+      height={height}
+      percentage={percentage}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
     >
-      <OuterSeekbar width={width} height={height} outerColor={outerColor}>
-        <InnerSeekbar
-          innerColor={innerColor}
-          ref={scrollRef}
-          percentage={mousePosition ? mousePosition * 100 : position * 100}
-        />
+      <OuterSeekbar width={width} height={height} outerColor={outerColor} radius={radius}>
+        <InnerSeekbar innerColor={innerColor} percentage={percentage} radius={radius} />
       </OuterSeekbar>
-      <Handle percentage={mousePosition ? mousePosition * 100 : position * 100} />
+      <Handle height={height} percentage={percentage} />
     </Container>
   );
 };
@@ -80,8 +88,9 @@ const Container = styled.div<ContainerStyleType>`
   display: flex;
   align-items: center;
   justify-content: center;
-  height: ${({ height }) => height}px;
-  &:hover {
+  height: ${({ height }) => height + 10}px;
+  &:hover,
+  &:active {
     cursor: pointer;
     div:nth-of-type(1) > div {
       background-color: green;
@@ -97,10 +106,8 @@ const OuterSeekbar = styled.div<OuterSeekbarStyleType>`
   width: ${({ width }) => width}px;
   height: ${({ height }) => height}px;
   background-color: ${({ outerColor }) => outerColor};
-  border-radius: 5px;
+  border-radius: ${({ radius }) => radius}px;
   overflow: hidden;
-  background-clip: content-box;
-  outline: none;
 `;
 
 const InnerSeekbar = styled.div<InnerSeekbarStyleType>`
@@ -109,11 +116,10 @@ const InnerSeekbar = styled.div<InnerSeekbarStyleType>`
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 5px;
+  border-radius: ${({ radius }) => radius}px;
   background-color: ${({ innerColor }) => innerColor};
   transform: translateX(calc(-100% + ${({ percentage }) => percentage}%));
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
-  outline: none;
 `;
 
 const Handle = styled.div<HandleStyleType>`
@@ -122,9 +128,9 @@ const Handle = styled.div<HandleStyleType>`
   top: 50%;
   left: ${({ percentage }) => percentage}%;
   transform: translateY(-50%);
-  width: 15px;
-  height: 15px;
-  margin-left: -6px;
+  width: ${({ height }) => height + 5}px;
+  height: ${({ height }) => height + 5}px;
+  margin-left: ${({ height }) => -(height + 5) / 2}px;
   background-color: #fff;
   border-radius: 50%;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
