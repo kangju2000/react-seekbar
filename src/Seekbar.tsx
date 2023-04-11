@@ -6,8 +6,8 @@ interface SeekbarProps {
   height?: number;
   outerColor?: string;
   innerColor?: string;
-  position_ms?: number;
-  duration_ms?: number;
+  min?: number;
+  max?: number;
   radius?: number;
   onSeek?: (position: number) => void;
 }
@@ -31,14 +31,14 @@ const Seekbar = ({
   height = 10,
   outerColor = '#a1a1a1',
   innerColor = '#eee',
-  position_ms = 1,
-  duration_ms = 1,
+  min = 0,
+  max = 100,
   radius = 5,
   onSeek = () => undefined,
 }: SeekbarProps) => {
   const [mousePosition, setMousePosition] = useState(null);
 
-  const currentPosition = position_ms / duration_ms;
+  const currentPosition = min / max;
   const percentage = mousePosition ? mousePosition * 100 : currentPosition * 100;
 
   const handleMouseDown = (event: React.MouseEvent | React.TouchEvent) => {
