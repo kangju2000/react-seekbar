@@ -11,7 +11,7 @@ interface SeekbarProps {
   radius?: number;
   onSeek?: (position: number) => void;
 }
-type ContainerStyleType = Pick<SeekbarProps, 'height'> & {
+type ContainerStyleType = Pick<SeekbarProps, 'width' | 'height'> & {
   percentage: number;
 };
 type OuterSeekbarStyleType = Pick<SeekbarProps, 'width' | 'height' | 'outerColor' | 'radius'>;
@@ -65,7 +65,7 @@ const Seekbar = ({
   };
 
   return (
-    <Container height={height} percentage={percentage} onMouseDown={handleMouseDown}>
+    <Container width={width} height={height} percentage={percentage} onMouseDown={handleMouseDown}>
       <OuterSeekbar width={width} height={height} outerColor={outerColor} radius={radius}>
         <InnerSeekbar innerColor={innerColor} percentage={percentage} radius={radius} />
       </OuterSeekbar>
@@ -79,6 +79,7 @@ const Container = styled.div<ContainerStyleType>`
   display: flex;
   align-items: center;
   justify-content: center;
+  width: ${({ width }) => width}px;
   height: ${({ height }) => height + 10}px;
   &:hover,
   &:active {
@@ -93,7 +94,6 @@ const Container = styled.div<ContainerStyleType>`
 `;
 
 const OuterSeekbar = styled.div<OuterSeekbarStyleType>`
-  position: relative;
   width: ${({ width }) => width}px;
   height: ${({ height }) => height}px;
   background-color: ${({ outerColor }) => outerColor};
@@ -102,9 +102,6 @@ const OuterSeekbar = styled.div<OuterSeekbarStyleType>`
 `;
 
 const InnerSeekbar = styled.div<InnerSeekbarStyleType>`
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   border-radius: ${({ radius }) => radius}px;
