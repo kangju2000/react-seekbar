@@ -1,6 +1,10 @@
 node_modules/
 dist/
+.storybook/
+src/
 rollup.config.js
 tsconfig.json
+.babelrc.json
 .eslintrc.json
 .prettierrc.json
+*.log

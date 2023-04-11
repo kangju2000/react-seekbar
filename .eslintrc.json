@@ -12,6 +12,7 @@
     "plugin:import/recommended",
     "plugin:storybook/recommended"
   ],
+  "ignorePatterns": ["dist", "node_modules"],
   "rules": {
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-explicit-any": "error",
