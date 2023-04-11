@@ -1,10 +1,28 @@
 {
   "name": "react-seekbar",
   "version": "0.0.1",
-  "description": "",
+  "description": "UI component for selecting values by dragging a bar",
+  "keywords": [
+    "react",
+    "seekbar",
+    "slider",
+    "range",
+    "input",
+    "react-seekbar"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kangju2000/react-seekbar.git"
+  },
+  "author": "kangju2000 <kangju2000@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kangju2000/react-seekbar/issues"
+  },
+  "homepage": "https://github.com/kangju2000/react-seekbar#readme",
   "scripts": {
     "build": "rm -rf dist && rollup -c",
     "watch": "rollup -cw",
@@ -12,16 +30,6 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kangju2000/react-seekbar.git"
-  },
-  "author": "kangju2000",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/kangju2000/react-seekbar/issues"
-  },
-  "homepage": "https://github.com/kangju2000/react-seekbar#readme",
   "devDependencies": {
     "@babel/preset-env": "^7.21.4",
     "@babel/preset-react": "^7.18.6",
