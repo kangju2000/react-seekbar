@@ -20,11 +20,10 @@ type InnerSeekbarStyleType = Pick<SeekbarProps, 'innerColor' | 'radius'> & {
 };
 type HandleStyleType = ContainerStyleType;
 
-function getSeekbarPosition(e: React.MouseEvent, width: number) {
-  const rect = e.currentTarget.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const position = x / width;
-  return position;
+function getPosition(e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) {
+  const obj = 'touches' in e ? e.touches[0] : e;
+
+  return { pageX: obj.pageX, pageY: obj.pageY };
 }
 
 const Seekbar = ({
@@ -38,43 +37,35 @@ const Seekbar = ({
   onSeek = () => undefined,
 }: SeekbarProps) => {
   const [mousePosition, setMousePosition] = useState(null);
-  const [isDrag, setIsDrag] = useState(false);
 
-  const position = position_ms / duration_ms;
-  const percentage = mousePosition ? mousePosition * 100 : position * 100;
+  const currentPosition = position_ms / duration_ms;
+  const percentage = mousePosition ? mousePosition * 100 : currentPosition * 100;
 
-  const handleMouseDown = () => {
-    setIsDrag(true);
-  };
+  const handleMouseDown = (event: React.MouseEvent | React.TouchEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect();
 
-  const handleMouseMove = (event: React.MouseEvent) => {
-    if (!isDrag) return;
-    const position = getSeekbarPosition(event, width);
-    if (position < 0 || position > 1) return;
-    setMousePosition(position);
-  };
+    const handleMouseMove = (event: MouseEvent | TouchEvent) => {
+      event.preventDefault();
+      const { pageX: moveX } = getPosition(event);
+      const offsetX = moveX - rect.left;
+      const position = offsetX / width;
+      if (position < 0 || position > 1) return;
+      setMousePosition(position);
+    };
 
-  const handleMouseUp = () => {
-    setIsDrag(false);
-    onSeek(mousePosition);
-    setMousePosition(null);
-  };
+    const handleMouseUp = () => {
+      onSeek(mousePosition);
+      setMousePosition(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
 
-  const handleMouseLeave = () => {
-    if (!isDrag) return;
-    setIsDrag(false);
-    setMousePosition(null);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   return (
-    <Container
-      height={height}
-      percentage={percentage}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-    >
+    <Container height={height} percentage={percentage} onMouseDown={handleMouseDown}>
       <OuterSeekbar width={width} height={height} outerColor={outerColor} radius={radius}>
         <InnerSeekbar innerColor={innerColor} percentage={percentage} radius={radius} />
       </OuterSeekbar>
