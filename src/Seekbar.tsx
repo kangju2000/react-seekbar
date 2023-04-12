@@ -1,17 +1,18 @@
 import styled from '@emotion/styled';
-import { useState } from 'react';
+import { useRef } from 'react';
 
 interface SeekbarProps {
   width?: number;
   height?: number;
   outerColor?: string;
   innerColor?: string;
-  min?: number;
-  max?: number;
+  hoverColor?: string;
+  position?: number;
+  duration?: number;
   radius?: number;
   onSeek?: (position: number) => void;
 }
-type ContainerStyleType = Pick<SeekbarProps, 'width' | 'height'> & {
+type ContainerStyleType = Pick<SeekbarProps, 'width' | 'height' | 'hoverColor'> & {
   percentage: number;
 };
 type OuterSeekbarStyleType = Pick<SeekbarProps, 'width' | 'height' | 'outerColor' | 'radius'>;
@@ -31,31 +32,42 @@ const Seekbar = ({
   height = 10,
   outerColor = '#a1a1a1',
   innerColor = '#eee',
-  min = 0,
-  max = 100,
+  hoverColor = '#006400',
+  position = 0,
+  duration = 100,
   radius = 5,
   onSeek = () => undefined,
 }: SeekbarProps) => {
-  const [mousePosition, setMousePosition] = useState(null);
+  const seekRef = useRef(null);
+  const handleRef = useRef(null);
 
-  const currentPosition = min / max;
-  const percentage = mousePosition ? mousePosition * 100 : currentPosition * 100;
+  const percentage = (position / duration) * 100;
 
   const handleMouseDown = (event: React.MouseEvent | React.TouchEvent) => {
+    let _needForRAF = true;
+    let _percentage = percentage;
     const rect = event.currentTarget.getBoundingClientRect();
 
     const handleMouseMove = (event: MouseEvent | TouchEvent) => {
+      console.log('mousemove');
       event.preventDefault();
       const { pageX: moveX } = getPosition(event);
       const offsetX = moveX - rect.left;
-      const position = offsetX / width;
-      if (position < 0 || position > 1) return;
-      setMousePosition(position);
+      if (offsetX < 0 || offsetX > width) return;
+      _percentage = (offsetX / width) * 100;
+
+      if (_needForRAF) {
+        _needForRAF = false;
+        requestAnimationFrame(() => {
+          seekRef.current.style.transform = `translateX(calc(-100% + ${_percentage}%))`;
+          handleRef.current.style.left = `${_percentage}%`;
+          _needForRAF = true;
+        });
+      }
     };
 
     const handleMouseUp = () => {
-      onSeek(mousePosition);
-      setMousePosition(null);
+      onSeek((_percentage / 100) * duration);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
@@ -65,11 +77,22 @@ const Seekbar = ({
   };
 
   return (
-    <Container width={width} height={height} percentage={percentage} onMouseDown={handleMouseDown}>
+    <Container
+      width={width}
+      height={height}
+      hoverColor={hoverColor}
+      percentage={percentage}
+      onMouseDown={handleMouseDown}
+    >
       <OuterSeekbar width={width} height={height} outerColor={outerColor} radius={radius}>
-        <InnerSeekbar innerColor={innerColor} percentage={percentage} radius={radius} />
+        <InnerSeekbar
+          ref={seekRef}
+          innerColor={innerColor}
+          percentage={percentage}
+          radius={radius}
+        />
       </OuterSeekbar>
-      <Handle height={height} percentage={percentage} />
+      <Handle ref={handleRef} height={height} percentage={percentage} />
     </Container>
   );
 };
@@ -85,7 +108,7 @@ const Container = styled.div<ContainerStyleType>`
   &:active {
     cursor: pointer;
     div:nth-of-type(1) > div {
-      background-color: green;
+      background-color: ${({ hoverColor }) => hoverColor};
     }
     div:nth-of-type(2) {
       display: block;
