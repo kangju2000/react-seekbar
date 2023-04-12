@@ -17,7 +17,10 @@
     "type": "git",
     "url": "git+https://github.com/kangju2000/react-seekbar.git"
   },
-  "author": "kangju2000 <kangju2000@gmail.com>",
+  "author": {
+    "name": "kangju2000",
+    "email": "kangju2000@gmail.com"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/kangju2000/react-seekbar/issues"
@@ -28,7 +31,8 @@
     "watch": "rollup -cw",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "chromatic": "npx chromatic --project-token=CHROMATIC_PROJECT_TOKEN"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.21.4",
