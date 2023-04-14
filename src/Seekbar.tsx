@@ -4,6 +4,7 @@ import { useRef } from 'react';
 interface SeekbarProps {
   width?: number;
   height?: number;
+  fullWidth?: boolean; //TODO: implement
   outerColor?: string;
   innerColor?: string;
   hoverColor?: string;
@@ -53,8 +54,9 @@ const Seekbar = ({
       event.preventDefault();
       const { pageX: moveX } = getPosition(event);
       const offsetX = moveX - rect.left;
-      if (offsetX < 0 || offsetX > width) return;
-      _percentage = (offsetX / width) * 100;
+      if (offsetX < 0) _percentage = 0;
+      else if (offsetX > width) _percentage = 100;
+      else _percentage = (offsetX / width) * 100;
 
       if (_needForRAF) {
         _needForRAF = false;
@@ -65,9 +67,10 @@ const Seekbar = ({
         });
       }
     };
-
     const handleMouseUp = () => {
       onSeek((_percentage / 100) * duration);
+      seekRef.current.style = '';
+      handleRef.current.style = '';
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
