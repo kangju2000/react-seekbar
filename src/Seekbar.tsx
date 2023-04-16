@@ -50,7 +50,6 @@ const Seekbar = ({
     const rect = event.currentTarget.getBoundingClientRect();
 
     const handleMouseMove = (event: MouseEvent | TouchEvent) => {
-      console.log('mousemove');
       event.preventDefault();
       const { pageX: moveX } = getPosition(event);
       const offsetX = moveX - rect.left;
