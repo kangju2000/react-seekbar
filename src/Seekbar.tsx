@@ -4,7 +4,7 @@ import { useRef } from 'react';
 interface SeekbarProps {
   width?: number;
   height?: number;
-  fullWidth?: boolean; //TODO: implement
+  fullWidth?: boolean;
   outerColor?: string;
   innerColor?: string;
   hoverColor?: string;
@@ -13,14 +13,16 @@ interface SeekbarProps {
   radius?: number;
   onSeek?: (position: number) => void;
 }
-type ContainerStyleType = Pick<SeekbarProps, 'width' | 'height' | 'hoverColor'> & {
+type ContainerStyleType = Pick<SeekbarProps, 'width' | 'fullWidth' | 'height' | 'hoverColor'> & {
   percentage: number;
 };
 type OuterSeekbarStyleType = Pick<SeekbarProps, 'width' | 'height' | 'outerColor' | 'radius'>;
 type InnerSeekbarStyleType = Pick<SeekbarProps, 'innerColor' | 'radius'> & {
   percentage: number;
 };
-type HandleStyleType = ContainerStyleType;
+type HandleStyleType = Pick<SeekbarProps, 'height'> & {
+  percentage: number;
+};
 
 function getPosition(e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) {
   const obj = 'touches' in e ? e.touches[0] : e;
@@ -31,6 +33,7 @@ function getPosition(e: React.MouseEvent | React.TouchEvent | MouseEvent | Touch
 const Seekbar = ({
   width = 300,
   height = 10,
+  fullWidth = false,
   outerColor = '#a1a1a1',
   innerColor = '#eee',
   hoverColor = '#006400',
@@ -41,21 +44,33 @@ const Seekbar = ({
 }: SeekbarProps) => {
   const seekRef = useRef(null);
   const handleRef = useRef(null);
-
   const percentage = (position / duration) * 100;
 
   const handleMouseDown = (event: React.MouseEvent | React.TouchEvent) => {
+    event.preventDefault();
+
     let _needForRAF = true;
     let _percentage = percentage;
+
+    if ('touches' in event) {
+      seekRef.current.style.backgroundColor = hoverColor;
+      handleRef.current.style.display = 'block';
+    }
+
     const rect = event.currentTarget.getBoundingClientRect();
+    const { pageX: downX } = getPosition(event);
+    const offsetX = downX - rect.left;
+    _percentage = (offsetX / rect.width) * 100;
+    seekRef.current.style.transform = `translateX(calc(-100% + ${_percentage}%))`;
+    handleRef.current.style.left = `${_percentage}%`;
 
     const handleMouseMove = (event: MouseEvent | TouchEvent) => {
       event.preventDefault();
       const { pageX: moveX } = getPosition(event);
       const offsetX = moveX - rect.left;
       if (offsetX < 0) _percentage = 0;
-      else if (offsetX > width) _percentage = 100;
-      else _percentage = (offsetX / width) * 100;
+      else if (offsetX > rect.width) _percentage = 100;
+      else _percentage = (offsetX / rect.width) * 100;
 
       if (_needForRAF) {
         _needForRAF = false;
@@ -67,26 +82,32 @@ const Seekbar = ({
       }
     };
     const handleMouseUp = () => {
-      onSeek((_percentage / 100) * duration);
+      onSeek(Math.round((_percentage / 100) * duration));
       seekRef.current.style = '';
       handleRef.current.style = '';
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleMouseMove);
+      document.removeEventListener('touchend', handleMouseUp);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleMouseMove);
+    document.addEventListener('touchend', handleMouseUp);
   };
 
   return (
     <Container
       width={width}
+      fullWidth={fullWidth}
       height={height}
       hoverColor={hoverColor}
       percentage={percentage}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleMouseDown}
     >
-      <OuterSeekbar width={width} height={height} outerColor={outerColor} radius={radius}>
+      <OuterSeekbar outerColor={outerColor} radius={radius}>
         <InnerSeekbar
           ref={seekRef}
           innerColor={innerColor}
@@ -104,23 +125,26 @@ const Container = styled.div<ContainerStyleType>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: ${({ width }) => width}px;
+  width: ${({ fullWidth, width }) => (fullWidth ? '100%' : `${width}px`)};
   height: ${({ height }) => height + 10}px;
-  &:hover,
-  &:active {
-    cursor: pointer;
-    div:nth-of-type(1) > div {
-      background-color: ${({ hoverColor }) => hoverColor};
-    }
-    div:nth-of-type(2) {
-      display: block;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover,
+    &:active {
+      cursor: pointer;
+      div:nth-of-type(1) > div {
+        background-color: ${({ hoverColor }) => hoverColor};
+      }
+      div:nth-of-type(2) {
+        display: block;
+      }
     }
   }
 `;
 
 const OuterSeekbar = styled.div<OuterSeekbarStyleType>`
-  width: ${({ width }) => width}px;
-  height: ${({ height }) => height}px;
+  width: 100%;
+  height: calc(100% - 10px);
   background-color: ${({ outerColor }) => outerColor};
   border-radius: ${({ radius }) => radius}px;
   overflow: hidden;
@@ -141,8 +165,8 @@ const Handle = styled.div<HandleStyleType>`
   top: 50%;
   left: ${({ percentage }) => percentage}%;
   transform: translateY(-50%);
-  width: ${({ height }) => height + 5}px;
-  height: ${({ height }) => height + 5}px;
+  width: ${({ height }) => height + 10}px;
+  height: ${({ height }) => height + 10}px;
   margin-left: ${({ height }) => -(height + 5) / 2}px;
   background-color: #fff;
   border-radius: 50%;
