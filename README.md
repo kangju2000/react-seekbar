@@ -15,7 +15,7 @@ UI component for selecting values by dragging a bar
 ```
 
 ## Usage
-docs and example usage can be found [here](https://6434e787cec6a786dfbadf52-ibqpiyyfop.chromatic.com/?path=/docs/example-seekbar--docs)
+docs and example usage can be found [here](https://6434e787cec6a786dfbadf52-btnfbflrxt.chromatic.com/?path=/docs/example-seekbar--docs)
 ```typescript
 import { useState } from 'react';
 import { Seekbar } from 'react-seekbar';
